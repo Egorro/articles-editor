@@ -1,12 +1,26 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { ArticleList } from './article-list/article-list';
+import { CurrentArticle } from './article/article';
+import { ArticlesStorService } from './articles-store.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [CommonModule, ArticleList, CurrentArticle],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
 export class App {
-  protected readonly title = signal('annotation');
+  private readonly store = inject(ArticlesStorService);
+
+  articles$ = this.store.articles$;
+  currentArticle$ = this.store.currentArticle$;
+
+  addNew() {
+    this.store.addNew();
+  }
+
+  delete(id: number) {
+    this.store.delete(id);
+  }
 }

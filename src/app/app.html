@@ -1,5 +1,12 @@
 <main class="main">
   <div class="content">
+    <app-article-list
+      [list]="articles$ | async"
+      (addNew)="addNew()"
+      (delete)="delete($event)"
+    ></app-article-list>
+    @if (currentArticle$ | async; as currentArticle) {
+      <app-current-article [article]="currentArticle"></app-current-article>
+    }
   </div>
 </main>
-<router-outlet />

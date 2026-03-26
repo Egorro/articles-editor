@@ -1,11 +1,5 @@
 import { Injectable } from '@angular/core';
-
-export enum StorageKey {
-  User = 'user',
-  Token = 'token',
-  Settings = 'settings'
-}
-
+/**Сервис работы с localStorage */
 @Injectable({ providedIn: 'root' })
 export class StorageService {
 get<T>(key: string): T | null {
