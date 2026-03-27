@@ -1,10 +1,36 @@
-<form class="current-article-form" [formGroup]="form" (ngSubmit)="onSave()">
-  <input class="current-article-name" type="text" formControlName="name" />
-  <textarea
-    class="current-article-text"
-    name="article"
-    id="article"
-    formControlName="text"
-  ></textarea>
-  <button type="submit">Сохранить</button>
-</form>
+<div class="current-article">
+  <div class="current-article-toolbar">
+    <button
+      type="button"
+      (click)="setMode(articleMode.View)"
+      [disabled]="mode() === articleMode.View"
+    >
+      Просмотр
+    </button>
+    <button
+      type="button"
+      (click)="setMode(articleMode.Edit)"
+      [disabled]="mode() === articleMode.Edit"
+    >
+      Редактирование
+    </button>
+  </div>
+
+  @if (mode() === articleMode.Edit) {
+    <form class="current-article-form" [formGroup]="form" (ngSubmit)="onSave()">
+      <input class="current-article-name" type="text" formControlName="name" />
+      <textarea
+        class="current-article-text"
+        name="article"
+        id="article"
+        formControlName="text"
+      ></textarea>
+      <button type="submit">Сохранить</button>
+    </form>
+  } @else {
+    <div class="current-article-view">
+      <h2 class="current-article-view-name">{{ article().name }}</h2>
+      <div class="current-article-view-text">{{ article().text }}</div>
+    </div>
+  }
+</div>

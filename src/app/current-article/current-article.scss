@@ -3,6 +3,18 @@
   height: 100%;
 }
 
+.current-article {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.current-article-toolbar {
+  display: flex;
+  gap: 8px;
+}
+
 .current-article-form {
   display: flex;
   flex-direction: column;
@@ -21,4 +33,22 @@
   box-sizing: border-box;
   width: 100%;
   resize: none;
+}
+
+.current-article-view {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.current-article-view-name {
+  margin: 0;
+}
+
+.current-article-view-text {
+  flex: 1;
+  min-height: 0;
+  white-space: pre-wrap;
 }

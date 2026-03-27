@@ -1,6 +1,11 @@
-import { Component, effect, inject, input, output } from '@angular/core';
+import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { Article } from '../models/article.model';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+
+enum ArticleMode {
+  View = 'view',
+  Edit = 'edit',
+}
 
 @Component({
   selector: 'app-current-article',
@@ -9,8 +14,10 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
   styleUrl: './current-article.scss',
 })
 export class CurrentArticle {
+  readonly articleMode = ArticleMode;
   article = input.required<Article>();
   save = output<{ id: number; changes: Pick<Article, 'name' | 'text'> }>();
+  mode = signal<ArticleMode>(ArticleMode.View);
   private readonly fb = inject(FormBuilder);
   form = this.fb.nonNullable.group({
     name: [''],
@@ -26,7 +33,7 @@ export class CurrentArticle {
           name: article.name,
           text: article.text,
         },
-        { emitEvent: false }
+        { emitEvent: false },
       );
     });
   }
@@ -37,5 +44,10 @@ export class CurrentArticle {
       id: this.article().id,
       changes: { name, text },
     });
+    this.mode.set(ArticleMode.View);
+  }
+
+  setMode(mode: ArticleMode): void {
+    this.mode.set(mode);
   }
 }
