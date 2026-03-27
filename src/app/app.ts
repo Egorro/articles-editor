@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ArticleList } from './article-list/article-list';
-import { CurrentArticle } from './article/article';
+import { CurrentArticle } from './current-article/current-article';
 import { ArticlesStorService } from './articles-store.service';
 
 @Component({

@@ -5,8 +5,8 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 @Component({
   selector: 'app-current-article',
   imports: [ReactiveFormsModule],
-  templateUrl: './article.html',
-  styleUrl: './article.scss',
+  templateUrl: './current-article.html',
+  styleUrl: './current-article.scss',
 })
 export class CurrentArticle {
   article = input.required<Article>();
