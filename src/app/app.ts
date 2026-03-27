@@ -3,6 +3,7 @@ import { Component, inject } from '@angular/core';
 import { ArticleList } from './article-list/article-list';
 import { CurrentArticle } from './current-article/current-article';
 import { ArticlesStorService } from './articles-store.service';
+import { Article } from './models/article.model';
 
 @Component({
   selector: 'app-root',
@@ -26,5 +27,9 @@ export class App {
 
   select(id: number) {
     this.store.select(id);
+  }
+
+  save(payload: { id: number; changes: Pick<Article, 'name' | 'text'> }) {
+    this.store.save(payload.id, payload.changes);
   }
 }

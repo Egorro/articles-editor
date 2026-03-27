@@ -1,4 +1,4 @@
-import { Component, effect, inject, input } from '@angular/core';
+import { Component, effect, inject, input, output } from '@angular/core';
 import { Article } from '../models/article.model';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
@@ -10,6 +10,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 })
 export class CurrentArticle {
   article = input.required<Article>();
+  save = output<{ id: number; changes: Pick<Article, 'name' | 'text'> }>();
   private readonly fb = inject(FormBuilder);
   form = this.fb.nonNullable.group({
     name: [''],
@@ -27,6 +28,14 @@ export class CurrentArticle {
         },
         { emitEvent: false }
       );
+    });
+  }
+
+  onSave(): void {
+    const { name, text } = this.form.getRawValue();
+    this.save.emit({
+      id: this.article().id,
+      changes: { name, text },
     });
   }
 }

@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { ArticlesApiService } from './articles-api.service';
-import { BehaviorSubject, combineLatest, filter, startWith, Subject, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, combineLatest, filter, map, startWith, Subject, switchMap } from 'rxjs';
+import { Article } from './models/article.model';
 
 @Injectable({
   providedIn: 'root',
@@ -9,36 +10,36 @@ export class ArticlesStorService {
   private readonly articleService = inject(ArticlesApiService);
   private readonly currentIdSub = new BehaviorSubject<number | null>(null);
   private readonly refreshArticlesSub = new Subject<void>();
+  private readonly refresh$ = this.refreshArticlesSub.pipe(startWith(null));
 
   private readonly currentId$ = this.currentIdSub.asObservable();
-  readonly articles$ = combineLatest([
-    this.refreshArticlesSub.pipe(startWith(null)),
-  ]).pipe(
-    tap(() => console.log('fdffdf')),
-    switchMap(() => this.articleService.getList())
+  readonly articles$ = this.refresh$.pipe(switchMap(() => this.articleService.getList()));
+
+  currentArticle$ = combineLatest([this.currentId$, this.refresh$]).pipe(
+    map(([id]) => id),
+    filter((id): id is number => id !== null),
+    switchMap((id) => this.articleService.getById(id)),
   );
 
-
-  currentArticle$ = this.currentId$.pipe(
-    filter(val => val !== null),
-    switchMap(id => this.articleService.getById(id))
-  )
-
   addNew() {
-    this.articleService.create({
+    this.articleService
+      .create({
         name: 'Новая статья',
         text: 'Введите текст',
         segments: [],
-    }).subscribe(() => this.refresh());
+      })
+      .subscribe(() => this.refresh());
   }
 
   delete(id: number) {
-    console.log('delete', id)
     this.articleService.delete(id).subscribe(() => this.refresh());
   }
 
+  save(id: number, changes: Pick<Article, 'name' | 'text'>) {
+    this.articleService.edit(id, changes).subscribe(() => this.refresh());
+  }
+
   refresh() {
-    console.log('refresh');
     this.refreshArticlesSub.next();
   }
 

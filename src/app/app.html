@@ -9,7 +9,10 @@
     ></app-article-list>
     <div class="article">
       @if (currentArticle$ | async; as currentArticle) {
-        <app-current-article [article]="currentArticle"></app-current-article>
+        <app-current-article
+          [article]="currentArticle"
+          (save)="save($event)"
+        ></app-current-article>
       } @else {
         Статья не выбрана
       }
