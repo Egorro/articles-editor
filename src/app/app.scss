@@ -2,3 +2,10 @@
   display: flex;
   gap: 20px;
 }
+
+.article {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--black);
+  border-radius: 7px;
+}

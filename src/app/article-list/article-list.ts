@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { ArticleListItem } from '../models/article.model';
+import { Article, ArticleListItem } from '../models/article.model';
 
 @Component({
   selector: 'app-article-list',
@@ -9,6 +9,8 @@ import { ArticleListItem } from '../models/article.model';
 })
 export class ArticleList {
   list = input.required<ArticleListItem[] | null>();
+  currentArticle = input<Article | null>(null);
   addNew = output();
   delete = output<number>();
+  select = output<number>();
 }

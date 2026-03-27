@@ -2,11 +2,17 @@
   <div class="content">
     <app-article-list
       [list]="articles$ | async"
+      [currentArticle]="currentArticle$ | async"
       (addNew)="addNew()"
       (delete)="delete($event)"
+      (select)="select($event)"
     ></app-article-list>
-    @if (currentArticle$ | async; as currentArticle) {
-      <app-current-article [article]="currentArticle"></app-current-article>
-    }
+    <div class="article">
+      @if (currentArticle$ | async; as currentArticle) {
+        <app-current-article [article]="currentArticle"></app-current-article>
+      } @else {
+        Статья не выбрана
+      }
+    </div>
   </div>
 </main>

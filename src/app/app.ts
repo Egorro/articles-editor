@@ -23,4 +23,8 @@ export class App {
   delete(id: number) {
     this.store.delete(id);
   }
+
+  select(id: number) {
+    this.store.select(id);
+  }
 }

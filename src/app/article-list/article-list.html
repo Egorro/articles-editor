@@ -1,6 +1,10 @@
 <div class="article-list">
   @for (item of list(); track $index) {
-    <div class="article-item">
+    <div
+      class="article-item"
+      [class.article-item--active]="currentArticle()?.id === item.id"
+      (click)="select.emit(item.id)"
+    >
       <div>
         <div>{{ item.id }}</div>
         <div>{{ item.name }}</div>

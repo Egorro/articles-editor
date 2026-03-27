@@ -41,4 +41,8 @@ export class ArticlesStorService {
     console.log('refresh');
     this.refreshArticlesSub.next();
   }
+
+  select(id: number) {
+    this.currentIdSub.next(id);
+  }
 }

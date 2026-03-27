@@ -23,3 +23,8 @@
     flex: 1;
   }
 }
+
+.article-item--active {
+  border-color: var(--black);
+  background-color: var(--hover);
+}
