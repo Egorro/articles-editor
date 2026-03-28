@@ -30,7 +30,21 @@
   } @else {
     <div class="current-article-view">
       <h2 class="current-article-view-name">{{ article().name }}</h2>
-      <div class="current-article-view-text">{{ article().text }}</div>
+      <!-- textContent исключаем лишние переносы строки -->
+      <div
+        class="current-article-view-text"
+        #textElement
+        (mouseup)="onViewerMouseUp()"
+        [textContent]="article().text"
+      ></div>
+
+      @if (pendingSelection(); as selection) {
+        <div class="current-article-selection-debug">
+          start: {{ selection.start }}, end: {{ selection.end }}
+          <br />
+          "{{ selection.selectedText }}"
+        </div>
+      }
     </div>
   }
 </div>
