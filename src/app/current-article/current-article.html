@@ -37,7 +37,23 @@
           #textElement
           (mouseup)="onViewerMouseUp()"
           [textContent]="article.text"
-        ></div>
+        >
+          @for (
+            segment of renderSegments();
+            track segment.start + '-' + segment.end + '-' + segment.type
+          ) {
+            @if (segment.type === 'annotation') {
+              <span
+                class="current-article-segment current-article-segment--annotation"
+                [style.color]="segment.color"
+                [attr.title]="segment.label"
+                >{{ segment.text }}</span
+              >
+            } @else {
+              <span class="current-article-segment">{{ segment.text }}</span>
+            }
+          }
+        </div>
 
         @if (pendingSelection(); as selection) {
           <app-annotation-draft

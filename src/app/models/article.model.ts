@@ -2,7 +2,7 @@ export interface Article {
   id: number;
   name: string;
   text: string;
-  segments: Annotation[];
+  segments: Segment[];
 }
 
 export interface ArticleListItem {
@@ -10,17 +10,23 @@ export interface ArticleListItem {
   name: string;
 }
 
-export interface Segment {
-  type: string;
+export interface BaseSegment {
+  type: SegmentType;
   start: number;
   end: number;
 }
 
-export interface Annotation extends Segment {
+export type SegmentType = 'annotation' | 'underline';
+
+export interface Annotation extends BaseSegment {
+  type: 'annotation';
   label: string;
   color: string;
 }
 
-export interface Underlying extends Segment {
+export interface Underline extends BaseSegment {
+  type: 'underline';
   color: string;
 }
+
+export type Segment = Annotation | Underline;

@@ -1,5 +1,6 @@
 import {
   Component,
+  computed,
   effect,
   ElementRef,
   inject,
@@ -17,6 +18,24 @@ enum ArticleMode {
   Edit = 'edit',
 }
 
+type RenderTextSegment = {
+  type: 'text';
+  start: number;
+  end: number;
+  text: string;
+};
+
+type RenderAnnotationSegment = {
+  type: 'annotation';
+  start: number;
+  end: number;
+  text: string;
+  color: string;
+  label: string;
+};
+
+type RenderSegment = RenderTextSegment | RenderAnnotationSegment;
+
 @Component({
   selector: 'app-current-article',
   imports: [ReactiveFormsModule, AnnotationDraft],
@@ -30,6 +49,57 @@ export class CurrentArticle {
   readonly articleMode = ArticleMode;
   currentArticle = toSignal(this.store.currentArticle$, { initialValue: null });
   mode = signal<ArticleMode>(ArticleMode.View);
+  renderSegments = computed<RenderSegment[]>(() => {
+    const article = this.currentArticle();
+    if (!article) {
+      return [];
+    }
+
+    const text = article.text;
+    const annotations = article.segments
+      .filter((segment): segment is Annotation => segment.type === 'annotation')
+      .sort((a, b) => a.start - b.start);
+
+    if (!annotations.length) {
+      return text.length ? [{ type: 'text', start: 0, end: text.length, text }] : [];
+    }
+
+    const result: RenderSegment[] = [];
+    let cursor = 0;
+
+    annotations.forEach((annotation) => {
+      if (annotation.start > cursor) {
+        result.push({
+          type: 'text',
+          start: cursor,
+          end: annotation.start,
+          text: text.slice(cursor, annotation.start),
+        });
+      }
+
+      result.push({
+        type: 'annotation',
+        start: annotation.start,
+        end: annotation.end,
+        text: text.slice(annotation.start, annotation.end),
+        color: annotation.color,
+        label: annotation.label,
+      });
+
+      cursor = annotation.end;
+    });
+
+    if (cursor < text.length) {
+      result.push({
+        type: 'text',
+        start: cursor,
+        end: text.length,
+        text: text.slice(cursor),
+      });
+    }
+
+    return result;
+  });
   pendingSelection = signal<{
     start: number;
     end: number;
@@ -247,3 +317,4 @@ export class CurrentArticle {
     }
   }
 }
+

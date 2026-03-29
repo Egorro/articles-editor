@@ -54,6 +54,16 @@
   border: 1px solid var(--black);
   border-radius: 6px;
   padding: 8px;
+  overflow: auto;
+}
+
+.current-article-segment {
+  white-space: pre-wrap;
+}
+
+.current-article-segment--annotation {
+  background-color: color-mix(in srgb, currentColor 18%, transparent);
+  cursor: help;
 }
 
 .annotation-draft-empty {
