@@ -53,6 +53,12 @@ export class ArticlesStorService {
     });
   }
 
+  clearSegments(id: number) {
+    this.articleService
+      .edit(id, { segments: [] })
+      .subscribe(() => this.refresh());
+  }
+
   refresh() {
     this.refreshArticlesSub.next();
   }

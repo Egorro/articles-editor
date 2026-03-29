@@ -163,6 +163,22 @@ export class CurrentArticle {
    * Переключает режим компонента и очищает текущее выделение вне режима просмотра.
    */
   setMode(mode: ArticleMode): void {
+    if (mode === ArticleMode.Edit && this.mode() !== ArticleMode.Edit) {
+      const article = this.currentArticle();
+
+      if (article && article.segments.length > 0) {
+        const confirmed = window.confirm(
+          'При переходе в режим редактирования все аннотации и подчеркивания будут удалены. Продолжить?'
+        );
+        
+        if (!confirmed) {
+          return;
+        }
+
+        this.store.clearSegments(article.id);
+      }
+    }
+
     this.mode.set(mode);
     if (mode !== ArticleMode.View) {
       this.pendingSelection.set(null);
