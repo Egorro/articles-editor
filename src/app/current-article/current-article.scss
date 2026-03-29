@@ -51,12 +51,11 @@
   flex: 1;
   min-height: 0;
   white-space: pre-wrap;
-}
-
-.current-article-selection-debug {
   border: 1px solid var(--black);
   border-radius: 6px;
   padding: 8px;
+}
+
+.annotation-draft-empty {
   font-size: 12px;
-  white-space: pre-wrap;
 }

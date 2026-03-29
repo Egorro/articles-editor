@@ -1,0 +1,33 @@
+.annotation-draft {
+  border: 1px solid var(--black);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.annotation-draft-selection {
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.annotation-draft-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.annotation-draft-row input[type='text'] {
+  flex: 1;
+}
+
+.annotation-draft-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.annotation-draft-error {
+  color: #b42318;
+  font-size: 12px;
+}

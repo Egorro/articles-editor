@@ -12,6 +12,7 @@
         <app-current-article
           [article]="currentArticle"
           (save)="save($event)"
+          (addAnnotation)="addAnnotation($event)"
         ></app-current-article>
       } @else {
         Статья не выбрана

@@ -1,0 +1,24 @@
+<form class="annotation-draft" [formGroup]="form" (ngSubmit)="onSave()">
+  <div class="annotation-draft-selection">
+    Выделение: {{ selection().start }}-{{ selection().end }} "{{ selection().selectedText }}"
+  </div>
+
+  <label class="annotation-draft-row">
+    Цвет
+    <input type="color" formControlName="color" />
+  </label>
+
+  <label class="annotation-draft-row">
+    Примечание
+    <input type="text" formControlName="label" placeholder="Введите примечание" />
+  </label>
+
+  @if (error(); as errorText) {
+    <div class="annotation-draft-error">{{ errorText }}</div>
+  }
+
+  <div class="annotation-draft-actions">
+    <button type="submit">Сохранить аннотацию</button>
+    <button type="button" (click)="onCancel()">Отмена</button>
+  </div>
+</form>

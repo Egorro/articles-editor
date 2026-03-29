@@ -39,11 +39,14 @@
       ></div>
 
       @if (pendingSelection(); as selection) {
-        <div class="current-article-selection-debug">
-          start: {{ selection.start }}, end: {{ selection.end }}
-          <br />
-          "{{ selection.selectedText }}"
-        </div>
+        <app-annotation-draft
+          [selection]="selection"
+          [error]="annotationError()"
+          (save)="onSaveAnnotation($event)"
+          (cancel)="onCancelAnnotation()"
+        ></app-annotation-draft>
+      } @else {
+        <div class="annotation-draft-empty">Выделите фрагмент текста для добавления аннотации.</div>
       }
     </div>
   }

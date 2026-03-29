@@ -8,8 +8,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { Article } from '../models/article.model';
+import { Annotation, Article } from '../models/article.model';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { AnnotationDraft } from './annotation-draft/annotation-draft';
 
 enum ArticleMode {
   View = 'view',
@@ -18,7 +19,7 @@ enum ArticleMode {
 
 @Component({
   selector: 'app-current-article',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AnnotationDraft],
   templateUrl: './current-article.html',
   styleUrl: './current-article.scss',
 })
@@ -28,12 +29,14 @@ export class CurrentArticle {
   readonly articleMode = ArticleMode;
   article = input.required<Article>();
   save = output<{ id: number; changes: Pick<Article, 'name' | 'text'> }>();
+  addAnnotation = output<{ id: number; annotation: Annotation }>();
   mode = signal<ArticleMode>(ArticleMode.View);
   pendingSelection = signal<{
     start: number;
     end: number;
     selectedText: string;
   } | null>(null);
+  annotationError = signal<string | null>(null);
   private readonly fb = inject(FormBuilder);
   form = this.fb.nonNullable.group({
     name: [''],
@@ -73,6 +76,7 @@ export class CurrentArticle {
     this.mode.set(mode);
     if (mode !== ArticleMode.View) {
       this.pendingSelection.set(null);
+      this.annotationError.set(null);
     }
   }
 
@@ -109,6 +113,45 @@ export class CurrentArticle {
       end: offsets.end,
       selectedText: text.slice(offsets.start, offsets.end),
     });
+    this.annotationError.set(null);
+  }
+
+  /**
+   * Создает аннотацию для текущего выделения и отправляет ее на сохранение.
+   */
+  onSaveAnnotation(draft: { color: string; label: string }): void {
+    const selection = this.pendingSelection();
+    if (!selection) {
+      return;
+    }
+
+    if (this.hasIntersection(selection.start, selection.end)) {
+      this.annotationError.set('Выделение пересекается с существующей аннотацией.');
+      return;
+    }
+
+    const annotation: Annotation = {
+      type: 'annotation',
+      start: selection.start,
+      end: selection.end,
+      color: draft.color,
+      label: draft.label.trim(),
+    };
+
+    this.addAnnotation.emit({
+      id: this.article().id,
+      annotation,
+    });
+    this.onCancelAnnotation();
+  }
+
+  /**
+   * Отменяет создание аннотации и очищает текущее выделение.
+   */
+  onCancelAnnotation(): void {
+    this.pendingSelection.set(null);
+    this.annotationError.set(null);
+    window.getSelection()?.removeAllRanges();
   }
 
   /**
@@ -116,6 +159,16 @@ export class CurrentArticle {
    */
   private clearPendingSelection(): void {
     this.pendingSelection.set(null);
+    this.annotationError.set(null);
+  }
+
+  /**
+   * Проверяет, пересекается ли новый диапазон с уже существующими сегментами статьи.
+   */
+  private hasIntersection(start: number, end: number): boolean {
+    return this.article().segments.some(
+      (segment) => start < segment.end && end > segment.start
+    );
   }
 
   /**
@@ -142,12 +195,12 @@ export class CurrentArticle {
     textElement: HTMLElement,
     range: Range
   ): { start: number; end: number } | null {
-    const startOffset = this.getOffsetInViewer(
+    const startOffset = this.getOffsetInTextElement(
       textElement,
       range.startContainer,
       range.startOffset
     );
-    const endOffset = this.getOffsetInViewer(
+    const endOffset = this.getOffsetInTextElement(
       textElement,
       range.endContainer,
       range.endOffset
@@ -167,7 +220,7 @@ export class CurrentArticle {
    * Берет позицию внутри DOM (узел + смещение в этом узле)
    * и возвращает индекс символа от начала текста в textElement.
    */
-  private getOffsetInViewer(
+  private getOffsetInTextElement(
     textElement: HTMLElement,
     node: Node,
     offset: number
