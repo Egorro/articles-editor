@@ -3,16 +3,16 @@
     <div
       class="article-item"
       [class.article-item--active]="currentArticle()?.id === item.id"
-      (click)="select.emit(item.id)"
+      (click)="select(item.id)"
     >
       <div>
         <div>{{ item.id }}</div>
         <div>{{ item.name }}</div>
       </div>
-      <button (click)="delete.emit(item.id)">X</button>
+      <button (click)="delete(item.id, $event)">X</button>
     </div>
   } @empty {
     <div>No data</div>
   }
-  <button (click)="addNew.emit()">Добавить новую</button>
+  <button (click)="addNew()">Добавить новую</button>
 </div>

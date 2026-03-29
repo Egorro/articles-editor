@@ -3,14 +3,14 @@ import {
   effect,
   ElementRef,
   inject,
-  input,
-  output,
   signal,
   viewChild,
 } from '@angular/core';
-import { Annotation, Article } from '../models/article.model';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Annotation } from '../models/article.model';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { AnnotationDraft } from './annotation-draft/annotation-draft';
+import { ArticlesStorService } from '../articles-store.service';
 
 enum ArticleMode {
   View = 'view',
@@ -25,11 +25,10 @@ enum ArticleMode {
 })
 export class CurrentArticle {
   private readonly textElementRef = viewChild<ElementRef<HTMLElement>>('textElement');
+  private readonly store = inject(ArticlesStorService);
 
   readonly articleMode = ArticleMode;
-  article = input.required<Article>();
-  save = output<{ id: number; changes: Pick<Article, 'name' | 'text'> }>();
-  addAnnotation = output<{ id: number; annotation: Annotation }>();
+  currentArticle = toSignal(this.store.currentArticle$, { initialValue: null });
   mode = signal<ArticleMode>(ArticleMode.View);
   pendingSelection = signal<{
     start: number;
@@ -45,7 +44,10 @@ export class CurrentArticle {
 
   constructor() {
     effect(() => {
-      const article = this.article();
+      const article = this.currentArticle();
+      if (!article) {
+        return;
+      }
 
       this.form.setValue(
         {
@@ -61,11 +63,13 @@ export class CurrentArticle {
    * Сохраняет изменения из формы и переключает компонент в режим просмотра.
    */
   onSave(): void {
+    const article = this.currentArticle();
+    if (!article) {
+      return;
+    }
+
     const { name, text } = this.form.getRawValue();
-    this.save.emit({
-      id: this.article().id,
-      changes: { name, text },
-    });
+    this.store.save(article.id, { name, text });
     this.mode.set(ArticleMode.View);
   }
 
@@ -106,12 +110,16 @@ export class CurrentArticle {
       return;
     }
 
-    const text = this.article().text;
+    const article = this.currentArticle();
+    if (!article) {
+      this.clearPendingSelection();
+      return;
+    }
 
     this.pendingSelection.set({
       start: offsets.start,
       end: offsets.end,
-      selectedText: text.slice(offsets.start, offsets.end),
+      selectedText: article.text.slice(offsets.start, offsets.end),
     });
     this.annotationError.set(null);
   }
@@ -121,7 +129,8 @@ export class CurrentArticle {
    */
   onSaveAnnotation(draft: { color: string; label: string }): void {
     const selection = this.pendingSelection();
-    if (!selection) {
+    const article = this.currentArticle();
+    if (!selection || !article) {
       return;
     }
 
@@ -138,10 +147,7 @@ export class CurrentArticle {
       label: draft.label.trim(),
     };
 
-    this.addAnnotation.emit({
-      id: this.article().id,
-      annotation,
-    });
+    this.store.addAnnotation(article.id, annotation);
     this.onCancelAnnotation();
   }
 
@@ -166,7 +172,12 @@ export class CurrentArticle {
    * Проверяет, пересекается ли новый диапазон с уже существующими сегментами статьи.
    */
   private hasIntersection(start: number, end: number): boolean {
-    return this.article().segments.some(
+    const article = this.currentArticle();
+    if (!article) {
+      return false;
+    }
+
+    return article.segments.some(
       (segment) => start < segment.end && end > segment.start
     );
   }
