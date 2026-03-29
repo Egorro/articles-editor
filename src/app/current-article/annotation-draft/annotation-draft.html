@@ -4,21 +4,30 @@
   </div>
 
   <label class="annotation-draft-row">
+    <select formControlName="type">
+      <option value="annotation">Аннотация</option>
+      <option value="underline">Подчеркивание</option>
+    </select>
+  </label>
+
+  <label class="annotation-draft-row">
     Цвет
     <input type="color" formControlName="color" />
   </label>
 
-  <label class="annotation-draft-row">
-    Примечание
-    <input type="text" formControlName="label" placeholder="Введите примечание" />
-  </label>
+  @if (isAnnotationType()) {
+    <label class="annotation-draft-row">
+      Примечание
+      <input type="text" formControlName="label" placeholder="Введите примечание" />
+    </label>
+  }
 
   @if (error(); as errorText) {
     <div class="annotation-draft-error">{{ errorText }}</div>
   }
 
   <div class="annotation-draft-actions">
-    <button type="submit">Сохранить аннотацию</button>
+    <button type="submit">Сохранить</button>
     <button type="button" (click)="onCancel()">Отмена</button>
   </div>
 </form>

@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { ArticlesApiService } from './articles-api.service';
 import { BehaviorSubject, combineLatest, filter, map, startWith, Subject, switchMap } from 'rxjs';
-import { Annotation, Article } from './models/article.model';
+import { Article, Segment } from './models/article.model';
 
 @Injectable({
   providedIn: 'root',
@@ -39,7 +39,7 @@ export class ArticlesStorService {
     this.articleService.edit(id, changes).subscribe(() => this.refresh());
   }
 
-  addAnnotation(id: number, annotation: Annotation) {
+  addSegment(id: number, segment: Segment) {
     this.articleService.getById(id).subscribe((article) => {
       if (!article) {
         return;
@@ -47,7 +47,7 @@ export class ArticlesStorService {
 
       this.articleService
         .edit(id, {
-          segments: [...article.segments, annotation],
+          segments: [...article.segments, segment],
         })
         .subscribe(() => this.refresh());
     });

@@ -10,7 +10,7 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Annotation } from '../models/article.model';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { AnnotationDraft } from './annotation-draft/annotation-draft';
+import { AnnotationDraft, AnnotationDraftSave } from './annotation-draft/annotation-draft';
 import { ArticlesStorService } from '../articles-store.service';
 
 enum ArticleMode {
@@ -34,7 +34,15 @@ type RenderAnnotationSegment = {
   label: string;
 };
 
-type RenderSegment = RenderTextSegment | RenderAnnotationSegment;
+type RenderUnderlineSegment = {
+  type: 'underline';
+  start: number;
+  end: number;
+  text: string;
+  color: string;
+};
+
+type RenderSegment = RenderTextSegment | RenderAnnotationSegment | RenderUnderlineSegment;
 
 @Component({
   selector: 'app-current-article',
@@ -56,37 +64,45 @@ export class CurrentArticle {
     }
 
     const text = article.text;
-    const annotations = article.segments
-      .filter((segment): segment is Annotation => segment.type === 'annotation')
-      .sort((a, b) => a.start - b.start);
+    const segments = article.segments.toSorted((a, b) => a.start - b.start);
 
-    if (!annotations.length) {
+    if (!segments.length) {
       return text.length ? [{ type: 'text', start: 0, end: text.length, text }] : [];
     }
 
     const result: RenderSegment[] = [];
     let cursor = 0;
 
-    annotations.forEach((annotation) => {
-      if (annotation.start > cursor) {
+    segments.forEach((segment) => {
+      if (segment.start > cursor) {
         result.push({
           type: 'text',
           start: cursor,
-          end: annotation.start,
-          text: text.slice(cursor, annotation.start),
+          end: segment.start,
+          text: text.slice(cursor, segment.start),
         });
       }
 
-      result.push({
-        type: 'annotation',
-        start: annotation.start,
-        end: annotation.end,
-        text: text.slice(annotation.start, annotation.end),
-        color: annotation.color,
-        label: annotation.label,
-      });
+      if (segment.type === 'annotation') {
+        result.push({
+          type: 'annotation',
+          start: segment.start,
+          end: segment.end,
+          text: text.slice(segment.start, segment.end),
+          color: segment.color,
+          label: segment.label,
+        });
+      } else {
+        result.push({
+          type: 'underline',
+          start: segment.start,
+          end: segment.end,
+          text: text.slice(segment.start, segment.end),
+          color: segment.color,
+        });
+      }
 
-      cursor = annotation.end;
+      cursor = segment.end;
     });
 
     if (cursor < text.length) {
@@ -197,7 +213,7 @@ export class CurrentArticle {
   /**
    * Создает аннотацию для текущего выделения и отправляет ее на сохранение.
    */
-  onSaveAnnotation(draft: { color: string; label: string }): void {
+  onSaveAnnotation(draft: AnnotationDraftSave): void {
     const selection = this.pendingSelection();
     const article = this.currentArticle();
     if (!selection || !article) {
@@ -209,15 +225,24 @@ export class CurrentArticle {
       return;
     }
 
-    const annotation: Annotation = {
-      type: 'annotation',
-      start: selection.start,
-      end: selection.end,
-      color: draft.color,
-      label: draft.label.trim(),
-    };
+    if (draft.type === 'annotation') {
+      const annotation: Annotation = {
+        type: 'annotation',
+        start: selection.start,
+        end: selection.end,
+        color: draft.color,
+        label: draft.label.trim(),
+      };
+      this.store.addSegment(article.id, annotation);
+    } else {
+      this.store.addSegment(article.id, {
+        type: 'underline',
+        start: selection.start,
+        end: selection.end,
+        color: draft.color,
+      });
+    }
 
-    this.store.addAnnotation(article.id, annotation);
     this.onCancelAnnotation();
   }
 

@@ -66,6 +66,11 @@
   cursor: help;
 }
 
+.current-article-segment--underline {
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
 .annotation-draft-empty {
   font-size: 12px;
 }

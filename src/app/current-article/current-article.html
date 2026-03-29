@@ -31,13 +31,7 @@
     } @else {
       <div class="current-article-view">
         <h2 class="current-article-view-name">{{ article.name }}</h2>
-        <!-- textContent исключает лишние переносы строки -->
-        <div
-          class="current-article-view-text"
-          #textElement
-          (mouseup)="onViewerMouseUp()"
-          [textContent]="article.text"
-        >
+        <div class="current-article-view-text" #textElement (mouseup)="onViewerMouseUp()">
           @for (
             segment of renderSegments();
             track segment.start + '-' + segment.end + '-' + segment.type
@@ -47,10 +41,16 @@
                 class="current-article-segment current-article-segment--annotation"
                 [style.color]="segment.color"
                 [attr.title]="segment.label"
-                >{{ segment.text }}</span
-              >
+                [textContent]="segment.text"
+              ></span>
+            } @else if (segment.type === 'underline') {
+              <span
+                class="current-article-segment current-article-segment--underline"
+                [style.color]="segment.color"
+                [textContent]="segment.text"
+              ></span>
             } @else {
-              <span class="current-article-segment">{{ segment.text }}</span>
+              <span class="current-article-segment" [textContent]="segment.text"></span>
             }
           }
         </div>

@@ -1,11 +1,16 @@
 import { Component, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { SegmentType } from '../../models/article.model';
 
 export type PendingSelection = {
   start: number;
   end: number;
   selectedText: string;
 };
+
+export type AnnotationDraftSave =
+  | { type: 'annotation'; color: string; label: string }
+  | { type: 'underline'; color: string };
 
 @Component({
   selector: 'app-annotation-draft',
@@ -16,11 +21,12 @@ export type PendingSelection = {
 export class AnnotationDraft {
   selection = input.required<PendingSelection>();
   error = input<string | null>(null);
-  save = output<{ color: string; label: string }>();
+  save = output<AnnotationDraftSave>();
   cancel = output<void>();
 
   private readonly fb = inject(FormBuilder);
   form = this.fb.nonNullable.group({
+    type: this.fb.nonNullable.control<SegmentType>('annotation'),
     color: ['#ff9800'],
     label: [''],
   });
@@ -30,6 +36,7 @@ export class AnnotationDraft {
       this.selection();
       this.form.patchValue(
         {
+          type: 'annotation',
           label: '',
         },
         { emitEvent: false }
@@ -37,11 +44,24 @@ export class AnnotationDraft {
     });
   }
 
+  isAnnotationType(): boolean {
+    return this.form.controls.type.value === 'annotation';
+  }
+
   onSave(): void {
-    const { color, label } = this.form.getRawValue();
+    const { type, color, label } = this.form.getRawValue();
+    if (type === 'annotation') {
+      this.save.emit({
+        type,
+        color,
+        label,
+      });
+      return;
+    }
+
     this.save.emit({
+      type: 'underline',
       color,
-      label,
     });
   }
 
