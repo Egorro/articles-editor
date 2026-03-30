@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { SegmentType } from '../../models/article.model';
 
@@ -17,6 +17,7 @@ export type AnnotationDraftSave =
   imports: [ReactiveFormsModule],
   templateUrl: './annotation-draft.html',
   styleUrl: './annotation-draft.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnnotationDraft {
   selection = input.required<PendingSelection>();

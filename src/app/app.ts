@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ArticleList } from './article-list/article-list';
 import { CurrentArticle } from './current-article/current-article';
 
@@ -8,5 +8,6 @@ import { CurrentArticle } from './current-article/current-article';
   imports: [CommonModule, ArticleList, CurrentArticle],
   templateUrl: './app.html',
   styleUrl: './app.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {}

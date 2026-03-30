@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ArticlesStorService } from '../articles-store.service';
 
@@ -7,6 +7,7 @@ import { ArticlesStorService } from '../articles-store.service';
   imports: [],
   templateUrl: './article-list.html',
   styleUrl: './article-list.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArticleList {
   private readonly store = inject(ArticlesStorService);

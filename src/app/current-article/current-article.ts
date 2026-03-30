@@ -1,4 +1,5 @@
 ﻿import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -29,6 +30,7 @@ enum ArticleMode {
   imports: [ReactiveFormsModule, AnnotationDraft],
   templateUrl: './current-article.html',
   styleUrl: './current-article.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CurrentArticle {
   private readonly textElementRef = viewChild<ElementRef<HTMLElement>>('textElement');
