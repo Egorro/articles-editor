@@ -1,4 +1,4 @@
-import {
+﻿import {
   Component,
   computed,
   effect,
@@ -12,37 +12,17 @@ import { Annotation } from '../models/article.model';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { AnnotationDraft, AnnotationDraftSave } from './annotation-draft/annotation-draft';
 import { ArticlesStorService } from '../articles-store.service';
+import {
+  buildRenderSegments,
+  getSelectionOffsets,
+  hasIntersection,
+  RenderSegment,
+} from './current-article.utils';
 
 enum ArticleMode {
   View = 'view',
   Edit = 'edit',
 }
-
-type RenderTextSegment = {
-  type: 'text';
-  start: number;
-  end: number;
-  text: string;
-};
-
-type RenderAnnotationSegment = {
-  type: 'annotation';
-  start: number;
-  end: number;
-  text: string;
-  color: string;
-  label: string;
-};
-
-type RenderUnderlineSegment = {
-  type: 'underline';
-  start: number;
-  end: number;
-  text: string;
-  color: string;
-};
-
-type RenderSegment = RenderTextSegment | RenderAnnotationSegment | RenderUnderlineSegment;
 
 @Component({
   selector: 'app-current-article',
@@ -63,58 +43,7 @@ export class CurrentArticle {
       return [];
     }
 
-    const text = article.text;
-    const segments = article.segments.toSorted((a, b) => a.start - b.start);
-
-    if (!segments.length) {
-      return text.length ? [{ type: 'text', start: 0, end: text.length, text }] : [];
-    }
-
-    const result: RenderSegment[] = [];
-    let cursor = 0;
-
-    segments.forEach((segment) => {
-      if (segment.start > cursor) {
-        result.push({
-          type: 'text',
-          start: cursor,
-          end: segment.start,
-          text: text.slice(cursor, segment.start),
-        });
-      }
-
-      if (segment.type === 'annotation') {
-        result.push({
-          type: 'annotation',
-          start: segment.start,
-          end: segment.end,
-          text: text.slice(segment.start, segment.end),
-          color: segment.color,
-          label: segment.label,
-        });
-      } else {
-        result.push({
-          type: 'underline',
-          start: segment.start,
-          end: segment.end,
-          text: text.slice(segment.start, segment.end),
-          color: segment.color,
-        });
-      }
-
-      cursor = segment.end;
-    });
-
-    if (cursor < text.length) {
-      result.push({
-        type: 'text',
-        start: cursor,
-        end: text.length,
-        text: text.slice(cursor),
-      });
-    }
-
-    return result;
+    return buildRenderSegments(article.text, article.segments);
   });
   pendingSelection = signal<{
     start: number;
@@ -145,9 +74,6 @@ export class CurrentArticle {
     });
   }
 
-  /**
-   * Сохраняет изменения из формы и переключает компонент в режим просмотра.
-   */
   onSave(): void {
     const article = this.currentArticle();
     if (!article) {
@@ -159,9 +85,6 @@ export class CurrentArticle {
     this.mode.set(ArticleMode.View);
   }
 
-  /**
-   * Переключает режим компонента и очищает текущее выделение вне режима просмотра.
-   */
   setMode(mode: ArticleMode): void {
     if (mode === ArticleMode.Edit && this.mode() !== ArticleMode.Edit) {
       const article = this.currentArticle();
@@ -170,7 +93,7 @@ export class CurrentArticle {
         const confirmed = window.confirm(
           'При переходе в режим редактирования все аннотации и подчеркивания будут удалены. Продолжить?'
         );
-        
+
         if (!confirmed) {
           return;
         }
@@ -186,9 +109,6 @@ export class CurrentArticle {
     }
   }
 
-  /**
-   * Обрабатывает выделение текста в режиме просмотра и сохраняет координаты выделенного фрагмента.
-   */
   onViewerMouseUp(): void {
     if (this.mode() !== ArticleMode.View) {
       return;
@@ -206,7 +126,7 @@ export class CurrentArticle {
       return;
     }
 
-    const offsets = this.getRangeOffsets(textElement, range);
+    const offsets = getSelectionOffsets(textElement, range);
     if (!offsets) {
       this.clearPendingSelection();
       return;
@@ -226,9 +146,6 @@ export class CurrentArticle {
     this.annotationError.set(null);
   }
 
-  /**
-   * Создает аннотацию для текущего выделения и отправляет ее на сохранение.
-   */
   onSaveAnnotation(draft: AnnotationDraftSave): void {
     const selection = this.pendingSelection();
     const article = this.currentArticle();
@@ -236,7 +153,7 @@ export class CurrentArticle {
       return;
     }
 
-    if (this.hasIntersection(selection.start, selection.end)) {
+    if (hasIntersection(article.segments, selection.start, selection.end)) {
       this.annotationError.set('Выделение пересекается с существующей аннотацией.');
       return;
     }
@@ -262,40 +179,17 @@ export class CurrentArticle {
     this.onCancelAnnotation();
   }
 
-  /**
-   * Отменяет создание аннотации и очищает текущее выделение.
-   */
   onCancelAnnotation(): void {
     this.pendingSelection.set(null);
     this.annotationError.set(null);
     window.getSelection()?.removeAllRanges();
   }
 
-  /**
-   * Сбрасывает информацию о текущем выделении текста.
-   */
   private clearPendingSelection(): void {
     this.pendingSelection.set(null);
     this.annotationError.set(null);
   }
 
-  /**
-   * Проверяет, пересекается ли новый диапазон с уже существующими сегментами статьи.
-   */
-  private hasIntersection(start: number, end: number): boolean {
-    const article = this.currentArticle();
-    if (!article) {
-      return false;
-    }
-
-    return article.segments.some(
-      (segment) => start < segment.end && end > segment.start
-    );
-  }
-
-  /**
-   * Возвращает валидный Range внутри контейнера просмотра или null, если выделение не подходит.
-   */
   private getValidTextRange(textElement: HTMLElement): Range | null {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
@@ -309,53 +203,4 @@ export class CurrentArticle {
 
     return range;
   }
-
-  /**
-   * Вычисляет абсолютные стартовый и конечный оффсеты выделения в пределах текста контейнера.
-   */
-  private getRangeOffsets(
-    textElement: HTMLElement,
-    range: Range
-  ): { start: number; end: number } | null {
-    const startOffset = this.getOffsetInTextElement(
-      textElement,
-      range.startContainer,
-      range.startOffset
-    );
-    const endOffset = this.getOffsetInTextElement(
-      textElement,
-      range.endContainer,
-      range.endOffset
-    );
-
-    if (startOffset === null || endOffset === null || startOffset === endOffset) {
-      return null;
-    }
-
-    return {
-      start: Math.min(startOffset, endOffset),
-      end: Math.max(startOffset, endOffset),
-    };
-  }
-
-  /**
-   * Берет позицию внутри DOM (узел + смещение в этом узле)
-   * и возвращает индекс символа от начала текста в textElement.
-   */
-  private getOffsetInTextElement(
-    textElement: HTMLElement,
-    node: Node,
-    offset: number
-  ): number | null {
-    const range = document.createRange();
-    range.selectNodeContents(textElement);
-
-    try {
-      range.setEnd(node, offset);
-      return range.toString().length;
-    } catch {
-      return null;
-    }
-  }
 }
-
